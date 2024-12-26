@@ -119,6 +119,11 @@ const checkDatabaseConnection = async (req, res, next) => {
   }
 };
 
+// Rota da pagina home onde vai abri a pagina inicial do app
+app.get('/home', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 /** Traz resultados de uma tabela especificada com limit de 10 linhas, passando o nome da tabela por parâmetro
   * Exemplo 1: http://localhost:8000/api/table/NOMEDATABELA
 */
