@@ -250,6 +250,38 @@ app.patch('/api/:table/:id', checkDatabaseConnection, async (req, res, next) => 
   });
 });
 
+/** Deletar um cadastro em uma tabala especifica passando um ID
+    * Exemplo 1: http://localhost:8000/api/users/25
+*/
+app.delete('/api/:table/:id', checkDatabaseConnection, async (req, res, next) => {
+  const { table, id } = req.params;
+
+  // Primeiro, verifique se o registro existe
+  const checkSql = `SELECT * FROM ${table} WHERE id = ?`;
+
+  // Se o registro existir, prossiga com a exclusão
+  const deleteSql = `DELETE FROM ${table} WHERE id = ?`;
+  const checkParams = [id];
+
+  try {
+    const result = await dbManager.query(checkSql, checkParams);
+
+    // Se não houver resultado, o registro não existe
+    if (result.length === 0) {
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ message: `O id '${id}' não encontrado na tabela '${table}'.` });
+    }
+
+    await dbManager.query(deleteSql, checkParams);
+    res.status(HTTP_STATUS.OK).json({ message: `ID '${id}' excluído com sucesso!` });
+  } catch (error) {
+    if (error?.message?.includes('no such table')) {
+      next(new Error(error.message.replace('no such table:', 'Não existe a tabela:')));
+    } else {
+      next(new Error(error.message));
+    }
+  }
+});
+
 /** Cria um novo cadastro
   * Exemplo 1: http://localhost:8000/api/table/users
   * Modelo de Exemplo no body:
