@@ -213,28 +213,32 @@ app.get('/api/pagination/:table', checkDatabaseConnection, async (req, res, next
   }
 });
 
-/* Atualiza um cadastro existente passando o ID. Modelo de Exemplo no body:
+/** Atualiza um cadastro existente passando o ID. 
+    * Exemplo 1: http://localhost:8000/api/table/users/1
+    * Modelo de Exemplo no body:
     {
-        "first": "Joseeilton",
-        "last": "gomes",
-        "dept": 4
+        "name": "Amilton Santos Gomes",
+        "email": "amilton@a1000ton.com"
     }
 */
-app.patch('/api/:table/:id', checkDatabaseConnection, async (req, res, next) => {
-  const { table, id } = req.params;
+app.patch('/api/table/:table/:id', checkDatabaseConnection, async (req, res, next) => {
+  const { table, id } = req?.params; // Obtém o nome da tabela da URL
 
-  if (!req.body.first || !req.body.last || !req.body.dept) {
-    return res.status(HTTP_STATUS_BAD_REQUEST).json({ 'message': 'Bad request. Missing required body parameters' });
+  let [keys, values] = [[], []];
+
+  if (Object.keys(req?.body).length > 0) {
+    for (const [key, value] of Object.entries(req?.body)) {
+      keys.push(key.concat(' = ?'));
+      values.push(value);
+    }
   }
-  // let sql = `UPDATE Users SET first = ?, last = ?, dept = ? WHERE id = ?`;
-  // let params = [req.body.first, req.body.last, req.body.dept, req.params.id];
-
-  const sql = `UPDATE ${table} SET first = ?, last = ?, dept = ? WHERE id = ?`;
-  const params = [id];
+  
+  const sql = `UPDATE ${table} SET ${keys.join()} WHERE id = ?`;
+  const params = values.concat(id);
 
   try {
     await dbManager.query(sql, params);
-    res.status(HTTP_STATUS.OK).json({ message: `ID '${id}' excluído com sucesso!` });
+    res.status(HTTP_STATUS.OK).json({ message: `Cadastro atualizado com sucesso!`, changes: this.changes });
   } catch (error) {
     if (error?.message?.includes('no such table')) {
       next(new Error(error.message.replace('no such table:', 'Não existe a tabela:')));
@@ -242,24 +246,13 @@ app.patch('/api/:table/:id', checkDatabaseConnection, async (req, res, next) => 
       next(new Error(error.message));
     }
   }
-
-  db.run(sql, params, function (err) {
-    if (err) {
-      res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ "error": err.message });
-      return;
-    }
-    res.status(HTTP_STATUS_OK).json({
-      "message": "Usuário atualizado com sucesso",
-      "changes": this.changes
-    });
-  });
 });
 
 /** Deletar um cadastro em uma tabala especifica passando um ID
-    * Exemplo 1: http://localhost:8000/api/users/25
+    * Exemplo 1: http://localhost:8000/api/table/users/25
 */
-app.delete('/api/:table/:id', checkDatabaseConnection, async (req, res, next) => {
-  const { table, id } = req.params;
+app.delete('/api/table/:table/:id', checkDatabaseConnection, async (req, res, next) => {
+  const { table, id } = req?.params;
 
   // Primeiro, verifique se o registro existe
   const checkSql = `SELECT * FROM ${table} WHERE id = ?`;
@@ -284,32 +277,6 @@ app.delete('/api/:table/:id', checkDatabaseConnection, async (req, res, next) =>
     } else {
       next(new Error(error.message));
     }
-  }
-});
-
-/**  Endpoint para criar uma nova tabela no banco de dados SQLite
-    * Exempplo 1: http://localhost:8000/api/users/add-column  
-    * Modelo de Exemplo no body:
-    {
-        "tableName": "Users2",
-        "columns": "id INTEGER PRIMARY KEY, first TEXT NOT NULL, last TEXT NOT NULL, dept INTEGER"
-    } 
-*/
-app.post('/api/create-table', checkDatabaseConnection, async (req, res, next) => {
-  const { tableName, columns } = req.body;
-
-  if (!tableName || !columns) {
-    return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: 'Nome da tabela e colunas são obrigatórios.' });
-  }
-
-  const createTableSQL = `CREATE TABLE IF NOT EXISTS ${tableName} (${columns});`;
-
-  try {
-    await dbManager.query(createTableSQL);
-    res.status(HTTP_STATUS.OK).json({ message: `Tabela '${tableName}' criada com sucesso!` });
-  } catch (error) {
-    console.error(error.message);
-    next(new Error('Erro ao criar a tabela: ' + error.message));
   }
 });
 
@@ -339,7 +306,7 @@ app.post('/api/table/:table', checkDatabaseConnection, async (req, res, next) =>
 
   try {
     await dbManager.query(sql, params);
-    res.status(HTTP_STATUS.OK).json({ message: `Cadastro criado com sucesso!`, "id": this.lastID });
+    res.status(HTTP_STATUS.OK).json({ message: `Cadastro criado com sucesso!`, id: this.lastID });
   } catch (error) {
     if (error?.message?.includes('UNIQUE constraint failed')) {
       next(new Error('O email já existe'));
@@ -349,17 +316,43 @@ app.post('/api/table/:table', checkDatabaseConnection, async (req, res, next) =>
   }
 });
 
+/**  Endpoint para criar uma nova tabela no banco de dados SQLite
+    * Exempplo 1: http://localhost:8000/api/table/users/add-column  
+    * Modelo de Exemplo no body:
+    {
+        "tableName": "Users2",
+        "columns": "id INTEGER PRIMARY KEY, first TEXT NOT NULL, last TEXT NOT NULL, dept INTEGER"
+    } 
+*/
+app.post('/api/table/create-table', checkDatabaseConnection, async (req, res, next) => {
+  const { tableName, columns } = req?.body;
+
+  if (!tableName || !columns) {
+    return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: 'Nome da tabela e colunas são obrigatórios.' });
+  }
+
+  const createTableSQL = `CREATE TABLE IF NOT EXISTS ${tableName} (${columns});`;
+
+  try {
+    await dbManager.query(createTableSQL);
+    res.status(HTTP_STATUS.OK).json({ message: `Tabela '${tableName}' criada com sucesso!` });
+  } catch (error) {
+    console.error(error.message);
+    next(new Error('Erro ao criar a tabela: ' + error.message));
+  }
+});
+
 /**  Criar uma nova coluna em uma tabela especifica no banco de dados SQLite
-    * Exempplo 1: http://localhost:8000/api/users/add-column  
+    * Exempplo 1: http://localhost:8000/api/table/add-column/users  
     * Modelo de Exemplo no body:
     {
         "columnName": "age",
         "columnType": "INTEGER"
     }
 */
-app.post('/api/:table/add-column', checkDatabaseConnection, async (req, res, next) => {
-  const { table } = req.params;
-  const { columnName, columnType } = req.body; // Obtem o nome da coluna e o tipo no corpo da solicitação
+app.post('/api/table/add-column/:table', checkDatabaseConnection, async (req, res, next) => {
+  const { table } = req?.params;
+  const { columnName, columnType } = req?.body; // Obtem o nome da coluna e o tipo no corpo da solicitação
 
   // Construa a instrução SQL
   const sql = `ALTER TABLE ${table} ADD COLUMN ${columnName} ${columnType};`;
