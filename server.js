@@ -344,6 +344,33 @@ app.post('/api/table/:table', checkDatabaseConnection, async (req, res, next) =>
   }
 });
 
+/**  Criar uma nova coluna em uma tabela especifica no banco de dados SQLite
+    * Exempplo 1: http://localhost:8000/api/users/add-column  
+    * Modelo de Exemplo no body:
+    {
+        "columnName": "age",
+        "columnType": "INTEGER"
+    }
+*/
+app.post('/api/:table/add-column', checkDatabaseConnection, async (req, res, next) => {
+  const { table } = req.params;
+  const { columnName, columnType } = req.body; // Obtem o nome da coluna e o tipo no corpo da solicitação
+
+  // Construa a instrução SQL
+  const sql = `ALTER TABLE ${table} ADD COLUMN ${columnName} ${columnType};`;
+
+  try {
+    await dbManager.query(sql);
+    res.status(HTTP_STATUS.OK).json({ message: `Coluna '${columnName}' criada com sucesso!` });
+  } catch (error) {
+    if (error?.message?.includes('no such table')) {
+      next(new Error(error.message.replace('no such table:', 'Não existe a tabela:')));
+    } else {
+      next(new Error(error.message));
+    }
+  }
+});
+
 // Rota padrão para endpoints não encontrados
 app.use('*', (req, res) => {
   res.status(HTTP_STATUS.NOT_FOUND).json({
