@@ -5,6 +5,7 @@ const morgan = require('morgan'); // Para logging
 const helmet = require('helmet'); // Para segurança
 const compression = require('compression'); // Para compressão de respostas
 const path = require('path');
+require('dotenv').config();
 
 // Configurações
 const config = {
