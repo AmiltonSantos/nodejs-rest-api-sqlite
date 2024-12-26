@@ -10,7 +10,7 @@ const path = require('path');
 const config = {
   port: process.env.PORT || 8000,
   dbPath: process.env.DB_PATH || 'database/database.db',
-  timeout: process.env.QUERY_TIMEOUT || 3 * 60 * 1000, // 3 minutos
+  timeout: process.env.queryAll_TIMEOUT || 3 * 60 * 1000, // 3 minutos
   nodeEnv: process.env.NODE_ENV || 'development'
 };
 
@@ -47,13 +47,30 @@ class DatabaseManager {
     });
   }
 
-  async query(sql, params = [], timeout = config.timeout) {
+  async queryAll(sql, params = [], timeout = config.timeout) {
     return new Promise((resolve, reject) => {
       const timeoutId = setTimeout(() => {
         reject(new Error('DATABASE_TIMEOUT'));
       }, timeout);
 
       this.db.all(sql, params, (err, rows) => {
+        clearTimeout(timeoutId);
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(rows);
+      });
+    });
+  }
+
+  async queryRun(sql, params = [], timeout = config.timeout) {
+    return new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        reject(new Error('DATABASE_TIMEOUT'));
+      }, timeout);
+
+      this.db.run(sql, params, (err, rows) => {
         clearTimeout(timeoutId);
         if (err) {
           reject(err);
@@ -128,17 +145,53 @@ app.get('/api/table/:table', checkDatabaseConnection, async (req, res, next) => 
   const sql = `SELECT * FROM ${table} LIMIT 10`;
 
   try {
-      const resultado = await dbManager.query(sql);
-      res.status(HTTP_STATUS.OK).json({
-          status: 'success',
-          data: resultado
-      });
+    const resultado = await dbManager.queryAll(sql);
+    res.status(HTTP_STATUS.OK).json({
+      status: 'success',
+      data: resultado
+    });
   } catch (error) {
-      if (error?.message?.includes('no such table')) {
-          next(new Error(error.message.replace('no such table:', 'Não existe a tabela:')));
-      } else {
-          next(new Error(error.message));
-      }
+    if (error?.message?.includes('no such table')) {
+      next(new Error(error.message.replace('no such table:', 'Não existe a tabela:')));
+    } else {
+      next(new Error(error.message));
+    }
+  }
+});
+
+/** Cria um novo cadastro
+  * Exemplo 1: http://localhost:8000/api/table/users
+  * Modelo de Exemplo no body:
+    {
+        "name": "Amilton Santos",
+        "email": "amilton@a1000ton.com"
+    }
+*/
+app.post('/api/table/:table', checkDatabaseConnection, async (req, res, next) => {
+  const { table } = req?.params; // Obtém o nome da tabela da URL
+
+  let [keys, values, i] = [[], [], []];
+
+  if (Object.keys(req?.body).length > 0) {
+    for (const [key, value] of Object.entries(req?.body)) {
+      keys.push(key);
+      values.push(value);
+      i.push('?');
+    }
+  }
+
+  const sql = `INSERT INTO ${table} (${keys.join()}) VALUES (${i.join()})`;
+  const params = values;
+
+  try {
+    await dbManager.queryRun(sql, params);
+    res.status(HTTP_STATUS.OK).json({ message: `Cadastro criado com sucesso!`, "id": this.lastID });
+  } catch (error) {
+    if (error?.message?.includes('UNIQUE constraint failed')) {
+      next(new Error('O email já existe'));
+    } else {
+      next(new Error(error.message));
+    }
   }
 });
 
