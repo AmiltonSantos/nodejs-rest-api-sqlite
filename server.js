@@ -142,6 +142,34 @@ app.get('/api/table/:table', checkDatabaseConnection, async (req, res, next) => 
   }
 });
 
+/** Pesquisando em uma tabela especifica passada por parâmetro e um ID
+    * Exemplo 1: http://localhost:8000/api/table/users/25
+*/
+app.get('/api/table/:table/:id', checkDatabaseConnection, async (req, res, next) => {
+  const { table, id } = req?.params;
+
+  if (!table && !id) {
+    return res.status(HTTP_STATUS.BAD_REQUEST).json({ 'message': 'Bad request. Missing ID parameter' });
+  }
+
+  const sql = `SELECT * FROM ${table} WHERE id = ?`;
+  const params = [id];
+
+  try {
+    const row = await dbManager.query(sql, params);
+    if (row.length === 0) {
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ "message": "User not found" });
+    }
+    res.status(HTTP_STATUS.OK).json(row[0]); // Retorna o primeiro usuário encontrado
+  } catch (error) {
+    if (error?.message?.includes('no such table')) {
+      next(new Error(error.message.replace('no such table:', 'Não existe a tabela:')));
+    } else {
+      next(new Error(error.message));
+    }
+  }
+});
+
 /** Cria um novo cadastro
   * Exemplo 1: http://localhost:8000/api/table/users
   * Modelo de Exemplo no body:
