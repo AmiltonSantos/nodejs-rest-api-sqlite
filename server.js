@@ -282,6 +282,32 @@ app.delete('/api/:table/:id', checkDatabaseConnection, async (req, res, next) =>
   }
 });
 
+/**  Endpoint para criar uma nova tabela no banco de dados SQLite
+    * Exempplo 1: http://localhost:8000/api/users/add-column  
+    * Modelo de Exemplo no body:
+    {
+        "tableName": "Users2",
+        "columns": "id INTEGER PRIMARY KEY, first TEXT NOT NULL, last TEXT NOT NULL, dept INTEGER"
+    } 
+*/
+app.post('/api/create-table', checkDatabaseConnection, async (req, res, next) => {
+  const { tableName, columns } = req.body;
+
+  if (!tableName || !columns) {
+    return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: 'Nome da tabela e colunas são obrigatórios.' });
+  }
+
+  const createTableSQL = `CREATE TABLE IF NOT EXISTS ${tableName} (${columns});`;
+
+  try {
+    await dbManager.query(createTableSQL);
+    res.status(HTTP_STATUS.OK).json({ message: `Tabela '${tableName}' criada com sucesso!` });
+  } catch (error) {
+    console.error(error.message);
+    next(new Error('Erro ao criar a tabela: ' + error.message));
+  }
+});
+
 /** Cria um novo cadastro
   * Exemplo 1: http://localhost:8000/api/table/users
   * Modelo de Exemplo no body:
