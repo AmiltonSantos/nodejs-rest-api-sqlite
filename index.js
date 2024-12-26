@@ -6,6 +6,7 @@ const morgan = require('morgan'); // Para logging
 const helmet = require('helmet'); // Para segurança
 const compression = require('compression'); // Para compressão de respostas
 const path = require('path');
+const cors = require('cors');
 
 // Configurações
 const config = {
@@ -22,6 +23,11 @@ const HTTP_STATUS = {
   NOT_FOUND: 404,
   TIMEOUT: 408,
   INTERNAL_SERVER_ERROR: 500
+};
+
+const corsOptions = {
+  origin: 'https://nodejs-rest-api-sqlite.vercel.app/', // Substitua pelo seu domínio
+  optionsSuccessStatus: 200 // Para navegadores antigos
 };
 
 // Classe para gerenciar conexão com banco de dados
@@ -105,6 +111,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(morgan('dev')); // Logging
 app.use(helmet()); // Segurança
 app.use(compression()); // Compressão
+app.use(cors(corsOptions));
 
 // Middleware para verificar conexão com banco
 const checkDatabaseConnection = async (req, res, next) => {
