@@ -387,6 +387,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+// Tratamento do Sinal de Interrupção (SIGINT) para Encerramento Limpo
 process.on('SIGINT', () => {
   console.log('Recebido SIGINT. Encerrando...');
   dbManager.close();
@@ -405,6 +406,7 @@ process.on('uncaughtException', (error) => {
   process.exit(1);
 });
 
+// Tratamento de Rejeições Não Tratadas em Promessas
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Rejeição não tratada:', reason);
   dbManager.close();
