@@ -208,6 +208,48 @@ app.get('/api/pagination/:table', checkDatabaseConnection, async (req, res, next
   }
 });
 
+/* Atualiza um cadastro existente passando o ID. Modelo de Exemplo no body:
+    {
+        "first": "Joseeilton",
+        "last": "gomes",
+        "dept": 4
+    }
+*/
+app.patch('/api/:table/:id', checkDatabaseConnection, async (req, res, next) => {
+  const { table, id } = req.params;
+
+  if (!req.body.first || !req.body.last || !req.body.dept) {
+    return res.status(HTTP_STATUS_BAD_REQUEST).json({ 'message': 'Bad request. Missing required body parameters' });
+  }
+  // let sql = `UPDATE Users SET first = ?, last = ?, dept = ? WHERE id = ?`;
+  // let params = [req.body.first, req.body.last, req.body.dept, req.params.id];
+
+  const sql = `UPDATE ${table} SET first = ?, last = ?, dept = ? WHERE id = ?`;
+  const params = [id];
+
+  try {
+    await dbManager.query(sql, params);
+    res.status(HTTP_STATUS.OK).json({ message: `ID '${id}' excluído com sucesso!` });
+  } catch (error) {
+    if (error?.message?.includes('no such table')) {
+      next(new Error(error.message.replace('no such table:', 'Não existe a tabela:')));
+    } else {
+      next(new Error(error.message));
+    }
+  }
+
+  db.run(sql, params, function (err) {
+    if (err) {
+      res.status(HTTP_STATUS_INTERNAL_SERVER_ERROR).json({ "error": err.message });
+      return;
+    }
+    res.status(HTTP_STATUS_OK).json({
+      "message": "Usuário atualizado com sucesso",
+      "changes": this.changes
+    });
+  });
+});
+
 /** Cria um novo cadastro
   * Exemplo 1: http://localhost:8000/api/table/users
   * Modelo de Exemplo no body:
