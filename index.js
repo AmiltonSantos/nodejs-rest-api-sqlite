@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const app = express();
@@ -5,7 +6,6 @@ const morgan = require('morgan'); // Para logging
 const helmet = require('helmet'); // Para segurança
 const compression = require('compression'); // Para compressão de respostas
 const path = require('path');
-require('dotenv').config();
 
 // Configurações
 const config = {
