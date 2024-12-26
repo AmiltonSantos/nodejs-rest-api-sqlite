@@ -10,7 +10,7 @@ const cors = require('cors');
 
 // Configurações
 const config = {
-  port: process.env.PORT || 8000,
+  port: process.env.PORT || 4000,
   dbPath: process.env.DB_PATH || 'database/database.db',
   timeout: process.env.query_TIMEOUT || 3 * 60 * 1000, // 3 minutos
   nodeEnv: process.env.NODE_ENV || 'development'
