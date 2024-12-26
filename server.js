@@ -170,6 +170,44 @@ app.get('/api/table/:table/:id', checkDatabaseConnection, async (req, res, next)
   }
 });
 
+/** Pesquisando passando uma tabela especifica, e com parâmetros de "page" e "limit"
+    * Exemplo 1: http://localhost:8000/api/pagination/users?page=1&limit=10
+*/
+app.get('/api/pagination/:table', checkDatabaseConnection, async (req, res, next) => {
+  const { table } = req?.params;
+  const { page, limit } = req?.query;
+
+  // Verifica se os parâmetros de página e limite estão presentes
+  if (!page || !limit) {
+    return res.status(HTTP_STATUS.BAD_REQUEST).json({ 'message': 'Bad request. Missing page or limit parameter' });
+  }
+
+  const pageNumber = parseInt(page, 10);
+  const limitNumber = parseInt(limit, 10);
+  const offset = (pageNumber - 1) * limitNumber;
+
+  const sql = `SELECT * FROM ${table} LIMIT ? OFFSET ?`;
+  const params = [limitNumber, offset];
+
+  try {
+    const rows = await dbManager.query(sql, params);
+    if (rows.length > 0) {
+      res.setHeader('Content-Type', 'application/json');
+      res.status(HTTP_STATUS.OK).json(rows);
+    } else {
+      res.status(HTTP_STATUS.OK).json({
+        "message": `A tabela '${table}' está vazia.`
+      });
+    }
+  } catch (error) {
+    if (error?.message?.includes('no such table')) {
+      next(new Error(error.message.replace('no such table:', 'Não existe a tabela:')));
+    } else {
+      next(new Error(error.message));
+    }
+  }
+});
+
 /** Cria um novo cadastro
   * Exemplo 1: http://localhost:8000/api/table/users
   * Modelo de Exemplo no body:
