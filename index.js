@@ -240,7 +240,7 @@ app.patch('/api/table/:table/:id', checkDatabaseConnection, async (req, res, nex
       values.push(value);
     }
   }
-  
+
   const sql = `UPDATE ${table} SET ${keys.join()} WHERE id = ?`;
   const params = values.concat(id);
 
