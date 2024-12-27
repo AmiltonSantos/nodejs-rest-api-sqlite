@@ -133,9 +133,9 @@ app.get('/home', (req, res) => {
 });
 
 /** Traz resultados de uma tabela especificada com limit de 10 linhas, passando o nome da tabela por parâmetro
-  * Exemplo 1: http://localhost:8000/api/table/NOMEDATABELA
+  * Exemplo 1: http://localhost:8000/api/read/NOMEDATABELA
 */
-app.get('/api/table/:table', checkDatabaseConnection, async (req, res, next) => {
+app.get('/api/read/:table', checkDatabaseConnection, async (req, res, next) => {
   const { table } = req?.params; // Obtém o nome da tabela da URL
 
   const sql = `SELECT * FROM ${table} LIMIT 10`;
@@ -156,9 +156,9 @@ app.get('/api/table/:table', checkDatabaseConnection, async (req, res, next) => 
 });
 
 /** Pesquisando em uma tabela especifica passada por parâmetro e um ID
-    * Exemplo 1: http://localhost:8000/api/table/users/25
+    * Exemplo 1: http://localhost:8000/api/read/users/25
 */
-app.get('/api/table/:table/:id', checkDatabaseConnection, async (req, res, next) => {
+app.get('/api/read/:table/:id', checkDatabaseConnection, async (req, res, next) => {
   const { table, id } = req?.params;
 
   if (!table && !id) {
@@ -222,14 +222,14 @@ app.get('/api/pagination/:table', checkDatabaseConnection, async (req, res, next
 });
 
 /** Atualiza um cadastro existente passando o ID. 
-    * Exemplo 1: http://localhost:8000/api/table/users/1
+    * Exemplo 1: http://localhost:8000/api/update/users/1
     * Modelo de Exemplo no body:
     {
         "name": "Amilton Santos Gomes",
         "email": "amilton@a1000ton.com"
     }
 */
-app.patch('/api/table/:table/:id', checkDatabaseConnection, async (req, res, next) => {
+app.patch('/api/update/:table/:id', checkDatabaseConnection, async (req, res, next) => {
   const { table, id } = req?.params; // Obtém o nome da tabela da URL
 
   let [keys, values] = [[], []];
@@ -257,9 +257,9 @@ app.patch('/api/table/:table/:id', checkDatabaseConnection, async (req, res, nex
 });
 
 /** Deletar um cadastro em uma tabala especifica passando um ID
-    * Exemplo 1: http://localhost:8000/api/table/users/25
+    * Exemplo 1: http://localhost:8000/api/delete/users/25
 */
-app.delete('/api/table/:table/:id', checkDatabaseConnection, async (req, res, next) => {
+app.delete('/api/delete/:table/:id', checkDatabaseConnection, async (req, res, next) => {
   const { table, id } = req?.params;
 
   // Primeiro, verifique se o registro existe
@@ -289,14 +289,14 @@ app.delete('/api/table/:table/:id', checkDatabaseConnection, async (req, res, ne
 });
 
 /** Cria um novo cadastro
-  * Exemplo 1: http://localhost:8000/api/table/users
+  * Exemplo 1: http://localhost:8000/api/create/users
   * Modelo de Exemplo no body:
     {
         "name": "Amilton Santos",
         "email": "amilton@a1000ton.com"
     }
 */
-app.post('/api/table/:table', checkDatabaseConnection, async (req, res, next) => {
+app.post('/api/create/:table', checkDatabaseConnection, async (req, res, next) => {
   const { table } = req?.params; // Obtém o nome da tabela da URL
 
   let [keys, values, i] = [[], [], []];
@@ -325,14 +325,14 @@ app.post('/api/table/:table', checkDatabaseConnection, async (req, res, next) =>
 });
 
 /**  Endpoint para criar uma nova tabela no banco de dados SQLite
-    * Exempplo 1: http://localhost:8000/api/table/users/add-column  
+    * Exempplo 1: http://localhost:8000/api/add-table
     * Modelo de Exemplo no body:
     {
         "tableName": "Users2",
         "columns": "id INTEGER PRIMARY KEY, first TEXT NOT NULL, last TEXT NOT NULL, dept INTEGER"
     } 
 */
-app.post('/api/table/create-table', checkDatabaseConnection, async (req, res, next) => {
+app.post('/api/add-table', checkDatabaseConnection, async (req, res, next) => {
   const { tableName, columns } = req?.body;
 
   if (!tableName || !columns) {
@@ -351,14 +351,14 @@ app.post('/api/table/create-table', checkDatabaseConnection, async (req, res, ne
 });
 
 /**  Criar uma nova coluna em uma tabela especifica no banco de dados SQLite
-    * Exempplo 1: http://localhost:8000/api/table/add-column/users  
+    * Exempplo 1: http://localhost:8000/api/add-column/users  
     * Modelo de Exemplo no body:
     {
         "columnName": "age",
         "columnType": "INTEGER"
     }
 */
-app.post('/api/table/add-column/:table', checkDatabaseConnection, async (req, res, next) => {
+app.post('/api/add-column/:table', checkDatabaseConnection, async (req, res, next) => {
   const { table } = req?.params;
   const { columnName, columnType } = req?.body; // Obtem o nome da coluna e o tipo no corpo da solicitação
 
