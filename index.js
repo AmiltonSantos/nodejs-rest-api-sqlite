@@ -26,7 +26,7 @@ const HTTP_STATUS = {
 };
 
 const corsOptions = {
-  origin: 'https://nodejs-rest-api-sqlite.vercel.app/', // Substitua pelo seu domínio
+  origin: 'https://nodejs-rest-api-sqlite.onrender.com/', // Substitua pelo seu domínio
   optionsSuccessStatus: 200 // Para navegadores antigos
 };
 
