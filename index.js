@@ -133,7 +133,7 @@ app.get('/home', (req, res) => {
 });
 
 /** Traz resultados de uma tabela especificada com limit de 10 linhas, passando o nome da tabela por parâmetro
-  * Exemplo 1: http://localhost:8000/api/read/NOMEDATABELA
+  * Exemplo 1: http://localhost:8000/api/read/users  || O "users" e o nome da tabela passada por paramentro
 */
 app.get('/api/read/:table', checkDatabaseConnection, async (req, res, next) => {
   const { table } = req?.params; // Obtém o nome da tabela da URL
@@ -156,7 +156,7 @@ app.get('/api/read/:table', checkDatabaseConnection, async (req, res, next) => {
 });
 
 /** Pesquisando em uma tabela especifica passada por parâmetro e um ID
-    * Exemplo 1: http://localhost:8000/api/read/users/25
+    * Exemplo 1: http://localhost:8000/api/read/users/25  || O "users" e o "25" é a tabela e o numero da linha passada por paramentro
 */
 app.get('/api/read/:table/:id', checkDatabaseConnection, async (req, res, next) => {
   const { table, id } = req?.params;
@@ -184,7 +184,7 @@ app.get('/api/read/:table/:id', checkDatabaseConnection, async (req, res, next) 
 });
 
 /** Pesquisando passando uma tabela especifica, e com parâmetros de "page" e "limit"
-    * Exemplo 1: http://localhost:8000/api/pagination/users?page=1&limit=10
+    * Exemplo 1: http://localhost:8000/api/pagination/users?page=1&limit=10 || O "users", o "page=1" e o "limit=10" e os paramentro padrao para fazer a paginação
 */
 app.get('/api/pagination/:table', checkDatabaseConnection, async (req, res, next) => {
   const { table } = req?.params;
@@ -222,11 +222,12 @@ app.get('/api/pagination/:table', checkDatabaseConnection, async (req, res, next
 });
 
 /** Atualiza um cadastro existente passando o ID. 
-    * Exemplo 1: http://localhost:8000/api/update/users/1
+    * Exemplo 1: http://localhost:8000/api/update/users/1  || O "users" e o "1" é a tabela e o numero da linha passada por paramentro
     * Modelo de Exemplo no body:
     {
-        "name": "Amilton Santos Gomes",
-        "email": "amilton@a1000ton.com"
+        "first": "Amilton",
+        "last": "Santos Gomes",
+        "dept": 2
     }
 */
 app.patch('/api/update/:table/:id', checkDatabaseConnection, async (req, res, next) => {
@@ -257,7 +258,7 @@ app.patch('/api/update/:table/:id', checkDatabaseConnection, async (req, res, ne
 });
 
 /** Deletar um cadastro em uma tabala especifica passando um ID
-    * Exemplo 1: http://localhost:8000/api/delete/users/25
+    * Exemplo 1: http://localhost:8000/api/delete/users/2 || O "users" e o "2" é a tabela e o numero da linha passada por paramentro
 */
 app.delete('/api/delete/:table/:id', checkDatabaseConnection, async (req, res, next) => {
   const { table, id } = req?.params;
@@ -289,11 +290,12 @@ app.delete('/api/delete/:table/:id', checkDatabaseConnection, async (req, res, n
 });
 
 /** Cria um novo cadastro
-  * Exemplo 1: http://localhost:8000/api/create/users
+  * Exemplo 1: http://localhost:8000/api/create/users || O "users" é o nome da tabela passada por paramentro
   * Modelo de Exemplo no body:
     {
-        "name": "Amilton Santos",
-        "email": "amilton@a1000ton.com"
+        "first": "Amilton",
+        "last": "Santos Gomes",
+        "dept": 1
     }
 */
 app.post('/api/create/:table', checkDatabaseConnection, async (req, res, next) => {
@@ -328,7 +330,7 @@ app.post('/api/create/:table', checkDatabaseConnection, async (req, res, next) =
     * Exempplo 1: http://localhost:8000/api/add-table
     * Modelo de Exemplo no body:
     {
-        "tableName": "Users2",
+        "tableName": "Users",
         "columns": "id INTEGER PRIMARY KEY, first TEXT NOT NULL, last TEXT NOT NULL, dept INTEGER"
     } 
 */
@@ -351,7 +353,7 @@ app.post('/api/add-table', checkDatabaseConnection, async (req, res, next) => {
 });
 
 /**  Criar uma nova coluna em uma tabela especifica no banco de dados SQLite
-    * Exempplo 1: http://localhost:8000/api/add-column/users  
+    * Exempplo 1: http://localhost:8000/api/add-column/users || O "users" é o nome da tabela passada por paramentro
     * Modelo de Exemplo no body:
     {
         "columnName": "age",
